@@ -86,12 +86,17 @@ export default function ScorersPage({
                         className="object-contain"
                       />
                       <div>
-                        <h3 className="text-xl font-semibold text-white">
-                          {scorer.player.name}
-                        </h3>
-                        <p className="text-slate-400 text-sm">
-                          {scorer.team.name}
-                        </p>
+                        <Link 
+                          href={`/person/${scorer.player.id}`}
+                          className="group"
+                        >
+                          <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                            {scorer.player.name}
+                          </h3>
+                          <p className="text-slate-400 text-sm">
+                            {scorer.team.name}
+                          </p>
+                        </Link>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">

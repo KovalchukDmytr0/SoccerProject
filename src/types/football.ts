@@ -65,3 +65,21 @@ export interface ScorersResponse {
   };
   scorers: Scorer[];
 }
+
+export interface PersonDetails extends Player {
+  currentTeam: Team & {
+    contract: {
+      start: string;
+      until: string;
+    };
+  };
+  section: string;
+  age: number;
+  birthCountry: string;
+  birthPlace?: string;
+  nationality: string;
+  height?: string;
+  weight?: string;
+  marketValue?: string;
+  lastUpdated: string;
+}
