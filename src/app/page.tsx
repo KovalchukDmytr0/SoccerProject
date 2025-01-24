@@ -1,20 +1,9 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFootballData } from '@/hooks/useFootballData';
 import { AreaCard } from '@/components/ui/AreaCard';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 300000, // 5 minutes
-    },
-  },
-});
-
-function FootballApp() {
+export default function Home() {
   const { organizedData, isLoading, error } = useFootballData();
 
   if (isLoading) {
@@ -49,13 +38,5 @@ function FootballApp() {
         </div>
       </div>
     </main>
-  );
-}
-
-export default function Home() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <FootballApp />
-    </QueryClientProvider>
   );
 }

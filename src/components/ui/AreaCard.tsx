@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Area, Competition } from '@/types/football';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,24 +72,32 @@ export const AreaCard = ({ area, competitions }: AreaCardProps) => {
                   key={competition.id}
                   className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
                 >
-                  {competition.emblem && (
-                    <div className="relative w-10 h-10">
-                      <Image
-                        src={competition.emblem}
-                        alt={`${competition.name} emblem`}
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-medium text-white">{competition.name}</h4>
-                    {competition.currentSeason && (
-                      <p className="text-sm text-slate-400">
-                        Season: {new Date(competition.currentSeason.startDate).getFullYear()} - {new Date(competition.currentSeason.endDate).getFullYear()}
-                      </p>
+                  <div className="flex-1 flex items-center gap-4">
+                    {competition.emblem && (
+                      <div className="relative w-10 h-10">
+                        <Image
+                          src={competition.emblem}
+                          alt={`${competition.name} emblem`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                     )}
+                    <div>
+                      <h4 className="font-medium text-white">{competition.name}</h4>
+                      {competition.currentSeason && (
+                        <p className="text-sm text-slate-400">
+                          Season: {new Date(competition.currentSeason.startDate).getFullYear()} - {new Date(competition.currentSeason.endDate).getFullYear()}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <Link
+                    href={`/competition/${competition.code}/scorers`}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    View Scorers
+                  </Link>
                 </div>
               ))}
             </div>
