@@ -3,13 +3,16 @@ import { API_KEY } from "@/lib/api-config";
 
 export async function GET(
   request: Request,
-  context: { params: { code: string } }
+  { params }: { params: { code: string } }
 ) {
-  const { code } = context.params;
+  const searchParams = new URL(request.url).searchParams;
+  const season = searchParams.get("season") || "2024";
+  const seasonParam = season ? `&season=${season}` : "";
+  const code = await params.code;
 
   try {
     const response = await fetch(
-      `https://api.football-data.org/v4/competitions/${code}/scorers?limit=10`,
+      `https://api.football-data.org/v4/competitions/${code}/scorers?limit=10${seasonParam}`,
       {
         headers: {
           "X-Auth-Token": API_KEY,

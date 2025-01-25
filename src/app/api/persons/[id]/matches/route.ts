@@ -3,11 +3,16 @@ import { API_KEY } from "@/lib/api-config";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
+  const searchParams = new URL(request.url).searchParams;
+  const season = searchParams.get("season");
+  const seasonParam = season ? `&season=${season}` : "";
+  const id = await params.id;
+
   try {
     const response = await fetch(
-      `https://api.football-data.org/v4/persons/${context.params.id}/matches?limit=40`,
+      `https://api.football-data.org/v4/persons/${id}/matches?limit=40${seasonParam}`,
       {
         headers: {
           "X-Auth-Token": API_KEY,
@@ -23,9 +28,9 @@ export async function GET(
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching player matches:", error);
+    console.error("Error fetching person matches:", error);
     return NextResponse.json(
-      { error: "Failed to fetch player matches" },
+      { error: "Failed to fetch person matches" },
       { status: 500 }
     );
   }

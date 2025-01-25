@@ -6,8 +6,8 @@ import { QueryProvider } from '@/components/providers/QueryProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Football Competitions Explorer',
-  description: 'Explore football competitions around the world',
+  title: 'Soccer Project',
+  description: 'A Next.js application for soccer statistics',
 }
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           {children}
         </QueryProvider>
