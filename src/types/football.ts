@@ -127,3 +127,22 @@ export interface CompetitionDetails extends Competition {
   }[];
   lastUpdated: string;
 }
+
+export interface CompetitionTeamsResponse {
+  count: number;
+  competition: Competition;
+  season: {
+    id: number;
+    startDate: string;
+    endDate: string;
+    currentMatchday: number;
+    winner?: Team;
+  };
+  teams: (Team & {
+    venue: string;
+    website: string;
+    founded: number;
+    clubColors: string;
+    lastUpdated: string;
+  })[];
+}
