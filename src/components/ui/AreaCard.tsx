@@ -80,6 +80,7 @@ export const AreaCard = ({ area, competitions }: AreaCardProps) => {
                           alt={`${competition.name} emblem`}
                           fill
                           className="object-contain"
+                          sizes="40px"
                         />
                       </div>
                     )}
@@ -92,12 +93,20 @@ export const AreaCard = ({ area, competitions }: AreaCardProps) => {
                       )}
                     </div>
                   </div>
-                  <Link
-                    href={`/competition/${competition.code}/scorers`}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    View Scorers
-                  </Link>
+                  <div className="flex gap-3">
+                    <Link
+                      href={`/competition/${competition.code}/winners`}
+                      className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      View Winners
+                    </Link>
+                    <Link
+                      href={`/competition/${competition.code}/scorers`}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      View Scorers
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

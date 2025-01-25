@@ -114,3 +114,16 @@ export interface TeamDetails extends Team {
   runningCompetitions: Competition[];
   lastUpdated: string;
 }
+
+export interface CompetitionDetails extends Competition {
+  area: Area;
+  seasons: {
+    id: number;
+    startDate: string;
+    endDate: string;
+    currentMatchday: number | null;
+    winner: Team | null;
+    stages: string[];
+  }[];
+  lastUpdated: string;
+}
