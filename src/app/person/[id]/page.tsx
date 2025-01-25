@@ -71,6 +71,33 @@ export default function PersonPage({
           Back to Home
         </Link>
 
+        <div className="flex gap-4 mb-8">
+          <Link
+            href={`/person/${resolvedParams.id}/matches`}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2v6.5l5-3.5" />
+              <path d="M12 2v6.5l-5-3.5" />
+              <path d="M12 15.5V22" />
+              <path d="M17 8.5V15" />
+              <path d="M7 8.5V15" />
+              <path d="M17 8.5a5 5 0 1 1-10 0" />
+            </svg>
+            View Player Matches
+          </Link>
+        </div>
+
         <div className="bg-slate-800/50 rounded-xl overflow-hidden shadow-xl">
           <div 
             className="p-8"
