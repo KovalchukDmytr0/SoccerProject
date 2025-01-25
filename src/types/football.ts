@@ -83,3 +83,34 @@ export interface PersonDetails extends Player {
   marketValue?: string;
   lastUpdated: string;
 }
+
+export interface TeamDetails extends Team {
+  area: Area;
+  address: string;
+  website: string;
+  founded: number;
+  clubColors: string;
+  venue: string;
+  coach: {
+    id: number;
+    name: string;
+    nationality: string;
+    contract: {
+      start: string;
+      until: string;
+    };
+  };
+  squad: (Player & {
+    dateOfBirth: string;
+    nationality: string;
+    position: string;
+  })[];
+  staff: {
+    id: number;
+    name: string;
+    nationality: string;
+    role: string;
+  }[];
+  runningCompetitions: Competition[];
+  lastUpdated: string;
+}

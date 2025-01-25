@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchFromAPI } from '@/lib/api-config';
 import { PersonDetails } from '@/types/football';
-import { teamColors } from '@/utils/teamColors';
+import { getTeamColors } from '@/utils/team-colors';
 import Image from 'next/image';
 import Link from 'next/link';
 import { use } from 'react';
@@ -27,10 +27,6 @@ function calculateAge(dateString: string) {
   }
   
   return age;
-}
-
-function getTeamColors(teamName: string) {
-  return teamColors[teamName] || teamColors.default;
 }
 
 export default function PersonPage({
@@ -60,38 +56,48 @@ export default function PersonPage({
     );
   }
 
-  const colors = getTeamColors(data.currentTeam.name);
+  const teamColors = getTeamColors(data.currentTeam.id);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <Link 
-          href="javascript:history.back()"
+          href="/"
           className="text-emerald-400 hover:text-emerald-300 transition-colors mb-8 inline-flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Back
+          Back to Home
         </Link>
 
-        <div className="bg-slate-800/50 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-slate-800/50 rounded-xl overflow-hidden shadow-xl">
           <div 
-            className="relative h-48"
+            className="p-8"
             style={{
-              background: `linear-gradient(to right, ${colors.from}, ${colors.to})`,
+              background: `linear-gradient(to right, ${teamColors.from}, ${teamColors.to})`,
             }}
           >
-            <div className="absolute -bottom-16 left-8 bg-slate-800 rounded-2xl p-2 shadow-xl">
-              <div className="w-32 h-32 relative bg-slate-700 rounded-xl overflow-hidden">
-                {data.currentTeam?.crest && (
-                  <Image
-                    src={data.currentTeam.crest}
-                    alt={data.currentTeam.name}
-                    fill
-                    className="object-contain p-2"
-                  />
-                )}
+            <div className="flex items-center gap-6">
+              <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-700/50">
+                <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
+                  {data.name[0]}
+                </div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">{data.name}</h1>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-6 h-6">
+                    <Image
+                      src={data.currentTeam.crest}
+                      alt={data.currentTeam.name}
+                      fill
+                      className="object-contain"
+                      sizes="24px"
+                    />
+                  </div>
+                  <p className="text-white/90">{data.currentTeam.name}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -181,7 +187,15 @@ export default function PersonPage({
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-slate-400">Team</p>
-                    <p className="text-white">{data.currentTeam.name}</p>
+                    <div className="flex items-center gap-4">
+                      <p className="text-white">{data.currentTeam.name}</p>
+                      <Link
+                        href={`/team/${data.currentTeam.id}`}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium"
+                      >
+                        View Team
+                      </Link>
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm text-slate-400">Contract Duration</p>

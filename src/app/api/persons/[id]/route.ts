@@ -3,11 +3,13 @@ import { API_KEY } from "@/lib/api-config";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
+
   try {
     const response = await fetch(
-      `https://api.football-data.org/v4/persons/${params.id}`,
+      `https://api.football-data.org/v4/persons/${id}`,
       {
         headers: {
           "X-Auth-Token": API_KEY,
