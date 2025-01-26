@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { API_KEY } from "@/lib/api-config";
 
-type RouteParams = { params: { code: string } };
+interface Params {
+  code: string;
+}
 
-export async function GET(_request: Request, { params }: RouteParams) {
-  const { code } = params;
+export async function GET(
+  request: Request,
+  context: { params: Params }
+): Promise<NextResponse> {
+  const { code } = context.params;
 
   try {
     const response = await fetch(
