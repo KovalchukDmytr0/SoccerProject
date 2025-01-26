@@ -152,7 +152,9 @@ export default function PredictiveAnalyticsPage() {
                 <h3 className="text-slate-400 text-sm mb-2">Average Match Quality</h3>
                 <p className="text-3xl font-bold text-white">
                   {matches.length > 0
-                    ? (matches.reduce((acc, match) => acc + match.scores.goals.quality, 0) / matches.length).toFixed(2)
+                    ? (matches.reduce((acc, match) => 
+                        acc + (match.scores?.goals?.quality ?? 0), 0
+                      ) / matches.length).toFixed(2)
                     : '0.00'
                   }
                 </p>
@@ -243,7 +245,7 @@ export default function PredictiveAnalyticsPage() {
                           <div className="text-center">
                             <div className="text-sm text-slate-400 mb-2">Match Quality</div>
                             <div className="text-3xl font-bold text-white">
-                              {matchData.scores.goals.quality.toFixed(2)}
+                              {(matchData.scores?.goals?.quality ?? 0).toFixed(2)}
                             </div>
                           </div>
                           <div className="flex flex-col items-center gap-2">
