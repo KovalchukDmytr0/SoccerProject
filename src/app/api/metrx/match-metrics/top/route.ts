@@ -5,7 +5,7 @@ import {
   METRX_API_HOST,
 } from "@/lib/metrx-api-config";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request): Promise<Response> {
   try {
     const response = await fetch(
       `${METRX_API_BASE_URL}/match-metrics/top?metric=abs(sub(TIH%2CTIA))&start=U&projections=MD%2CTI%2CXG&maxCount=10&order=DESC`,
