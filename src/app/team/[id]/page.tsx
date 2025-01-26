@@ -3,39 +3,49 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchFromAPI } from '@/lib/api-config';
 import { TeamDetails } from '@/types/football';
-import { getTeamColors } from '@/utils/team-colors';
-import Image from 'next/image';
 import Link from 'next/link';
-import { use } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert } from '@/components/ui/alert';
+import { getTeamGradientStyle } from '@/utils/team-colors';
+
+interface PageProps {
+  params: { id: string };
+}
 
 export default function TeamPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const resolvedParams = use(params);
+}: PageProps) {
   const { data, isLoading, error } = useQuery<TeamDetails>({
-    queryKey: ['team', resolvedParams.id],
-    queryFn: () => fetchFromAPI(`/teams/${resolvedParams.id}`),
+    queryKey: ['team', params.id],
+    queryFn: () => fetchFromAPI(`/metrx/teams/${params.id}`),
+    staleTime: 30 * 1000,
+    retry: 1,
   });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-emerald-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner size="lg" />
       </div>
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-red-500 text-xl">Error loading team details. Please try again later.</div>
-      </div>
+      <Alert variant="destructive" className="m-4">
+        Error loading team details: {error.message}
+        <Link href="/" className="block mt-2 text-blue-500 hover:underline">
+          Return to Home
+        </Link>
+      </Alert>
     );
   }
 
-  const teamColors = getTeamColors(data.id);
+  if (!data) {
+    return null;
+  }
+
+  const headerStyle = getTeamGradientStyle(parseInt(params.id));
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-12 px-4">
@@ -50,133 +60,105 @@ export default function TeamPage({
           Back to Home
         </Link>
 
-        <div className="bg-slate-800/50 rounded-xl overflow-hidden shadow-xl">
-          {/* Hero Section */}
-          <div 
-            className="p-8"
-            style={{
-              background: `linear-gradient(to right, ${teamColors.from}, ${teamColors.to})`,
-            }}
-          >
-            <div className="flex items-center gap-6">
-              <div className="relative w-32 h-32">
-                <Image
-                  src={data.crest}
-                  alt={data.name}
-                  fill
-                  className="object-contain"
-                  sizes="128px"
-                  priority
-                />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">{data.name}</h1>
-                <p className="text-white/90">{data.venue}</p>
+        <div className="rounded-xl shadow-xl mb-8 overflow-hidden">
+          <div style={headerStyle} className="p-8 relative">
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {data.crest && (
+                  <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-xl p-4 flex-shrink-0">
+                    <img
+                      src={data.crest}
+                      alt={`${data.name} crest`}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+                <div className="text-center md:text-left">
+                  <h1 className="text-4xl font-bold text-white mb-2">{data.name}</h1>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                    <span className="bg-white/10 backdrop-blur-md text-white px-3 py-1 rounded-full text-sm">
+                      {data.area.name}
+                    </span>
+                    {data.venue && (
+                      <span className="bg-white/10 backdrop-blur-md text-white px-3 py-1 rounded-full text-sm">
+                        {data.venue}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-white/80">
+                    <p>Founded: {data.founded}</p>
+                    {data.website && (
+                      <p className="mt-1">
+                        Website: <a href={data.website} target="_blank" rel="noopener noreferrer" className="hover:text-white">{data.website}</a>
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Content Grid */}
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Club Information */}
-            <div className="bg-slate-700/30 rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Club Information</h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-slate-400">Founded</p>
-                  <p className="text-white">{data.founded}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-400">Club Colors</p>
-                  <p className="text-white">{data.clubColors}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-400">Address</p>
-                  <p className="text-white">{data.address}</p>
-                </div>
-                {data.website && (
-                  <div>
-                    <p className="text-sm text-slate-400">Website</p>
-                    <a href={data.website} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">
-                      {data.website}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Coach Information */}
-            {data.coach && (
-              <div className="bg-slate-700/30 rounded-xl p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">Coach</h2>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-slate-400">Name</p>
-                    <p className="text-white">{data.coach.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-400">Nationality</p>
-                    <p className="text-white">{data.coach.nationality}</p>
-                  </div>
-                  {data.coach.contract && (
-                    <div>
-                      <p className="text-sm text-slate-400">Contract</p>
-                      <p className="text-white">
-                        {new Date(data.coach.contract.start).getFullYear()} - {new Date(data.coach.contract.until).getFullYear()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Squad */}
-            <div className="md:col-span-2 bg-slate-700/30 rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Squad</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data.squad.map((player) => (
-                  <Link
-                    key={player.id}
-                    href={`/person/${player.id}`}
-                    className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800/70 transition-colors"
-                  >
-                    <h3 className="font-medium text-white hover:text-emerald-400 transition-colors">
-                      {player.name}
-                    </h3>
-                    <p className="text-sm text-slate-400">{player.position}</p>
-                    <p className="text-xs text-slate-500">{player.nationality}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Competitions */}
-            <div className="md:col-span-2 bg-slate-700/30 rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Current Competitions</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data.runningCompetitions.map((competition) => (
-                  <div key={competition.id} className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
-                    {competition.emblem && (
-                      <div className="relative w-8 h-8">
-                        <Image
-                          src={competition.emblem}
-                          alt={competition.name}
-                          fill
-                          className="object-contain"
-                          sizes="32px"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-white">{competition.name}</p>
-                      <p className="text-sm text-slate-400">{competition.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="bg-slate-800 p-8">
+            <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link
+                href={`/team/${params.id}/matches`}
+                className="bg-slate-700 hover:bg-slate-600 transition-colors rounded-xl p-4 text-white flex items-center justify-between group"
+              >
+                <span>View Matches</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:translate-x-1 transition-transform">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </Link>
             </div>
           </div>
         </div>
+
+        {data.squad && data.squad.length > 0 && (
+          <div className="bg-slate-800 rounded-xl shadow-xl p-8">
+            <h2 className="text-2xl font-semibold text-white mb-6">Squad</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.squad.map((player) => (
+                <Link
+                  key={player.id}
+                  href={`/person/${player.id}`}
+                  className="bg-slate-700 hover:bg-slate-600 transition-colors rounded-xl p-4 flex items-center justify-between group"
+                >
+                  <div>
+                    <h3 className="text-white font-medium">{player.name}</h3>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-sm text-white/60">{player.position}</span>
+                      {player.shirtNumber && (
+                        <span className="text-sm text-white/60">#{player.shirtNumber}</span>
+                      )}
+                    </div>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60 transform group-hover:translate-x-1 transition-transform">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {data.coach && (
+          <div className="bg-slate-800 rounded-xl shadow-xl p-8 mt-8">
+            <h2 className="text-2xl font-semibold text-white mb-6">Coach</h2>
+            <div className="bg-slate-700 rounded-xl p-4">
+              <h3 className="text-white font-medium">{data.coach.name}</h3>
+              <div className="flex gap-2 mt-1">
+                <span className="text-sm text-white/60">{data.coach.nationality}</span>
+                {data.coach.contract?.start && data.coach.contract?.until && (
+                  <span className="text-sm text-white/60">
+                    Contract: {new Date(data.coach.contract.start).getFullYear()} - {new Date(data.coach.contract.until).getFullYear()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

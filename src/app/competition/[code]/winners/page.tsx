@@ -5,37 +5,48 @@ import { fetchFromAPI } from '@/lib/api-config';
 import { CompetitionDetails } from '@/types/football';
 import Image from 'next/image';
 import Link from 'next/link';
-import { use } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert } from '@/components/ui/alert';
 
 function formatSeasonYear(dateString: string) {
   return new Date(dateString).getFullYear();
 }
 
+interface PageProps {
+  params: { code: string };
+}
+
 export default function CompetitionWinnersPage({
   params,
-}: {
-  params: Promise<{ code: string }>;
-}) {
-  const resolvedParams = use(params);
+}: PageProps) {
   const { data, isLoading, error } = useQuery<CompetitionDetails>({
-    queryKey: ['competition', resolvedParams.code],
-    queryFn: () => fetchFromAPI(`/competitions/${resolvedParams.code}`),
+    queryKey: ['competition', params.code],
+    queryFn: () => fetchFromAPI(`/competitions/${params.code}`),
+    staleTime: 30 * 1000, // 30 seconds
+    retry: 1,
   });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-emerald-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner size="lg" />
       </div>
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-red-500 text-xl">Error loading competition details. Please try again later.</div>
-      </div>
+      <Alert variant="error" className="m-4">
+        Error loading competition details: {error.message}
+        <Link href="/" className="block mt-2 text-blue-500 hover:underline">
+          Return to Home
+        </Link>
+      </Alert>
     );
+  }
+
+  if (!data) {
+    return null;
   }
 
   // Filter seasons with winners

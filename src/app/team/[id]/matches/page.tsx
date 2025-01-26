@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchFromAPI } from '@/lib/api-config';
-import { PlayerMatchesResponse } from '@/types/football';
+import { TeamMatchesResponse, TeamDetails } from '@/types/football';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,19 +18,36 @@ interface PageProps {
   params: { id: string };
 }
 
-export default function PlayerMatchesPage({
+export default function TeamMatchesPage({
   params,
 }: PageProps) {
   const [selectedSeason, setSelectedSeason] = useState(SEASONS[0].value);
 
-  const { data, isLoading, error } = useQuery<PlayerMatchesResponse>({
-    queryKey: ['player-matches', params.id, selectedSeason],
-    queryFn: () => fetchFromAPI(`/persons/${params.id}/matches?season=${selectedSeason}`),
+  const { data: teamData, isLoading: isTeamLoading, error: teamError } = useQuery<TeamDetails>({
+    queryKey: ['team', params.id],
+    queryFn: () => fetchFromAPI(`/metrx/teams/${params.id}`),
     staleTime: 30 * 1000,
     retry: 1,
   });
 
-  if (isLoading) {
+  const { data: matchesData, isLoading: isMatchesLoading, error: matchesError } = useQuery<TeamMatchesResponse>({
+    queryKey: ['team-matches', params.id, selectedSeason],
+    queryFn: async () => {
+      try {
+        const response = await fetchFromAPI(`/metrx/teams/${params.id}/matches?season=${selectedSeason}`);
+        if (!response) {
+          throw new Error('No data received from API');
+        }
+        return response;
+      } catch (err) {
+        throw new Error(err instanceof Error ? err.message : 'Failed to fetch team matches');
+      }
+    },
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+
+  if (isTeamLoading || isMatchesLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Spinner size="lg" />
@@ -38,10 +55,10 @@ export default function PlayerMatchesPage({
     );
   }
 
-  if (error) {
+  if (teamError || matchesError) {
     return (
-      <Alert variant="error" className="m-4">
-        Error loading matches: {error.message}
+      <Alert variant="destructive" className="m-4">
+        Error loading data: {(teamError || matchesError)?.message}
         <Link href="/" className="block mt-2 text-blue-500 hover:underline">
           Return to Home
         </Link>
@@ -49,7 +66,7 @@ export default function PlayerMatchesPage({
     );
   }
 
-  if (!data) {
+  if (!teamData || !matchesData) {
     return null;
   }
 
@@ -57,13 +74,13 @@ export default function PlayerMatchesPage({
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <Link 
-          href={`/person/${params.id}`}
+          href={`/team/${params.id}`}
           className="text-emerald-400 hover:text-emerald-300 transition-colors mb-8 inline-flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Back to Player
+          Back to Team Profile
         </Link>
 
         <div className="bg-slate-800 rounded-xl shadow-xl mb-8 overflow-hidden">
@@ -71,7 +88,7 @@ export default function PlayerMatchesPage({
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
                 <h1 className="text-4xl font-bold text-white text-center md:text-left mb-4">
-                  {data.person.name} - Matches
+                  {teamData.name} - Matches
                 </h1>
                 <div className="flex items-center gap-4">
                   <label htmlFor="season" className="text-white">Season:</label>
@@ -94,7 +111,7 @@ export default function PlayerMatchesPage({
         </div>
 
         <div className="grid gap-6">
-          {data.matches.map((match) => (
+          {matchesData.matches.map((match) => (
             <Link
               key={match.id}
               href={`/match/${match.id}`}
