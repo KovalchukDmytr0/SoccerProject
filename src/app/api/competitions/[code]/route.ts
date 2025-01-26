@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { API_KEY } from "@/lib/api-config";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { code: string } }
-) {
+type RouteParams = { params: { code: string } };
+
+export async function GET(_request: Request, { params }: RouteParams) {
   const { code } = params;
 
   try {
