@@ -32,17 +32,13 @@ interface Match {
   };
 }
 
-interface PlayerMatchesResponse {
+interface TeamMatchesResponse {
   matches: Match[];
-  person: {
-    id: number;
-    name: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    nationality: string;
-    position: string;
-    shirtNumber: number;
+  resultSet: {
+    count: number;
+    competitions: string[];
+    first: string;
+    last: string;
   };
 }
 
@@ -52,7 +48,7 @@ const SEASONS = [
   { value: '2022', label: '2021/22' },
 ];
 
-export default function PlayerMatchesPage({
+export default function TeamMatchesPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -60,9 +56,9 @@ export default function PlayerMatchesPage({
   const resolvedParams = use(params);
   const [selectedSeason, setSelectedSeason] = useState(SEASONS[0].value);
 
-  const { data, isLoading, error } = useQuery<PlayerMatchesResponse>({
-    queryKey: ['player-matches', resolvedParams.id, selectedSeason],
-    queryFn: () => fetchFromAPI(`/persons/${resolvedParams.id}/matches?season=${selectedSeason}`),
+  const { data, isLoading, error } = useQuery<TeamMatchesResponse>({
+    queryKey: ['team-matches', resolvedParams.id, selectedSeason],
+    queryFn: () => fetchFromAPI(`/teams/${resolvedParams.id}/matches?season=${selectedSeason}`),
   });
 
   if (isLoading) {
@@ -76,7 +72,7 @@ export default function PlayerMatchesPage({
   if (error || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-red-500 text-xl">Error loading player matches. Please try again later.</div>
+        <div className="text-red-500 text-xl">Error loading team matches. Please try again later.</div>
       </div>
     );
   }
@@ -85,13 +81,13 @@ export default function PlayerMatchesPage({
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <Link 
-          href="/"
+          href={`/team/${resolvedParams.id}`}
           className="text-emerald-400 hover:text-emerald-300 transition-colors mb-8 inline-flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Back to Home
+          Back to Team Profile
         </Link>
 
         <motion.div
@@ -99,20 +95,6 @@ export default function PlayerMatchesPage({
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-800/50 rounded-xl overflow-hidden shadow-xl"
         >
-          {/* Player Header */}
-          <div className="p-6 border-b border-slate-700">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  {data.person.name}
-                </h1>
-                <p className="text-slate-400">
-                  {data.person.position} • {data.person.nationality}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Season Selector */}
           <div className="p-6 border-b border-slate-700">
             <div className="flex items-center gap-4">
