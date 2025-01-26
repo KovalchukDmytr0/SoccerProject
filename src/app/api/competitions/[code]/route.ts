@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { API_KEY } from "@/lib/api-config";
 
 export async function GET(
-  request: Request,
-  context: { params: { code: string } }
+  request: NextRequest,
+  { params }: { params: { code: string } }
 ) {
-  const { code } = context.params;
+  const { code } = params;
 
   try {
     const response = await fetch(
