@@ -1,3 +1,5 @@
+import React from "react";
+
 interface TeamColors {
   from: string;
   to: string;
@@ -35,4 +37,11 @@ const teamColors: Record<number, TeamColors> = {
 
 export function getTeamColors(teamId: number): TeamColors {
   return teamColors[teamId] || teamColors[0];
+}
+
+export function getTeamGradientStyle(teamId: number): React.CSSProperties {
+  const colors = getTeamColors(teamId);
+  return {
+    background: `linear-gradient(to right, ${colors.from}, ${colors.to})`,
+  };
 }
