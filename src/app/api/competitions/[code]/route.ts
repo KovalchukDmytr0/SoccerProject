@@ -1,16 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { API_KEY } from "@/lib/api-config";
 
-type Props = {
-  params: {
-    code: string;
-  };
-};
-
 export async function GET(
-  _request: Request,
-  { params }: Props
-): Promise<NextResponse> {
+  request: NextRequest,
+  { params }: { params: { code: string } }
+) {
   const { code } = params;
 
   try {
