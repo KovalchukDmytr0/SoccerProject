@@ -2,18 +2,31 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchFromAPI } from '@/lib/api-config';
-import { PersonDetails } from '@/types/football';
-import { getTeamColors } from '@/utils/team-colors';
 import Image from 'next/image';
 import Link from 'next/link';
-import { use } from 'react';
+import { format } from 'date-fns';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert } from '@/components/ui/alert';
+import { getTeamColors } from '@/utils/team-colors';
 
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+interface PersonDetails {
+  id: number;
+  name: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  nationality: string;
+  position: string;
+  shirtNumber?: number;
+  currentTeam?: {
+    id: number;
+    name: string;
+    crest: string;
+  };
+}
+
+interface PageProps {
+  params: { id: string };
 }
 
 function calculateAge(dateString: string) {
@@ -29,34 +42,42 @@ function calculateAge(dateString: string) {
   return age;
 }
 
-export default function PersonPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const resolvedParams = use(params);
+export default function PersonPage({ params }: PageProps) {
   const { data, isLoading, error } = useQuery<PersonDetails>({
-    queryKey: ['person', resolvedParams.id],
-    queryFn: () => fetchFromAPI(`/persons/${resolvedParams.id}`),
+    queryKey: ['person', params.id],
+    queryFn: () => fetchFromAPI(`/persons/${params.id}`),
+    staleTime: 30 * 1000,
+    retry: 1,
   });
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-emerald-500"></div>
+        <Spinner size="lg" />
       </div>
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-red-500 text-xl">Error loading player details. Please try again later.</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <div className="flex flex-col gap-4">
+            <p>Error loading person details. Please try again later.</p>
+            <Link href="/" className="text-sm text-white hover:text-slate-200 transition-colors">
+              Return to Home
+            </Link>
+          </div>
+        </Alert>
       </div>
     );
   }
 
-  const teamColors = getTeamColors(data.currentTeam.id);
+  if (!data) {
+    return null;
+  }
+
+  const teamColors = data.currentTeam ? getTeamColors(data.currentTeam.id) : getTeamColors(0);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-12 px-4">
@@ -71,121 +92,80 @@ export default function PersonPage({
           Back to Home
         </Link>
 
-        <div className="flex gap-4 mb-8">
-          <Link
-            href={`/person/${resolvedParams.id}/matches`}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2v6.5l5-3.5" />
-              <path d="M12 2v6.5l-5-3.5" />
-              <path d="M12 15.5V22" />
-              <path d="M17 8.5V15" />
-              <path d="M7 8.5V15" />
-              <path d="M17 8.5a5 5 0 1 1-10 0" />
-            </svg>
-            View Player Matches
-          </Link>
-        </div>
-
         <div className="bg-slate-800/50 rounded-xl overflow-hidden shadow-xl">
+          {/* Header Section */}
           <div 
             className="p-8"
             style={{
-              background: `linear-gradient(to right, ${teamColors.from}, ${teamColors.to})`,
+              background: `linear-gradient(to right, ${teamColors.from}, ${teamColors.to})`
             }}
           >
             <div className="flex items-center gap-6">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-700/50">
-                <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                  {data.name[0]}
+              {data.currentTeam ? (
+                <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm">
+                  <Image
+                    src={data.currentTeam.crest}
+                    alt={data.currentTeam.name}
+                    fill
+                    className="object-contain p-2"
+                    sizes="128px"
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="w-32 h-32 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <span className="text-6xl font-bold text-white/50">{data.name[0]}</span>
+                </div>
+              )}
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2">{data.name}</h1>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-6 h-6">
-                    <Image
-                      src={data.currentTeam.crest}
-                      alt={data.currentTeam.name}
-                      fill
-                      className="object-contain"
-                      sizes="24px"
-                    />
-                  </div>
-                  <p className="text-white/90">{data.currentTeam.name}</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm text-white">
+                    {data.position}
+                  </span>
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm text-white">
+                    {data.nationality}
+                  </span>
+                  {data.shirtNumber && (
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm text-white">
+                      #{data.shirtNumber}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-20 px-8 pb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">
-                  {data.name}
-                </h1>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <span className="px-3 py-1 bg-slate-700/50 rounded-full text-sm">
-                    {data.position}
-                  </span>
-                  <span className="px-3 py-1 bg-slate-700/50 rounded-full text-sm">
-                    {data.nationality}
-                  </span>
-                </div>
-              </div>
-              {data.currentTeam && (
-                <div className="text-right">
-                  <h2 className="text-xl font-semibold text-white">
-                    {data.currentTeam.name}
-                  </h2>
-                  <p className="text-slate-400 text-sm">
-                    Contract until {formatDate(data.currentTeam.contract.until)}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Details Section */}
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Personal Information */}
               <div className="bg-slate-700/30 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-slate-400">Full Name</p>
+                    <p className="text-white">{data.firstName} {data.lastName}</p>
+                  </div>
                   <div>
                     <p className="text-sm text-slate-400">Date of Birth</p>
-                    <p className="text-white">{formatDate(data.dateOfBirth)} ({calculateAge(data.dateOfBirth)} years)</p>
+                    <p className="text-white">
+                      {format(new Date(data.dateOfBirth), 'PPP')}
+                      <span className="text-slate-400 text-sm ml-2">
+                        ({calculateAge(data.dateOfBirth)} years)
+                      </span>
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Birth Place</p>
-                    <p className="text-white">{data.birthPlace || 'N/A'}, {data.birthCountry}</p>
+                    <p className="text-sm text-slate-400">Nationality</p>
+                    <p className="text-white">{data.nationality}</p>
                   </div>
-                  {data.height && (
-                    <div>
-                      <p className="text-sm text-slate-400">Height</p>
-                      <p className="text-white">{data.height}</p>
-                    </div>
-                  )}
-                  {data.weight && (
-                    <div>
-                      <p className="text-sm text-slate-400">Weight</p>
-                      <p className="text-white">{data.weight}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
+              {/* Professional Details */}
               <div className="bg-slate-700/30 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Professional Details</h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
                     <p className="text-sm text-slate-400">Position</p>
                     <p className="text-white">{data.position}</p>
@@ -196,40 +176,61 @@ export default function PersonPage({
                       <p className="text-white">#{data.shirtNumber}</p>
                     </div>
                   )}
-                  {data.marketValue && (
+                  {data.currentTeam && (
                     <div>
-                      <p className="text-sm text-slate-400">Market Value</p>
-                      <p className="text-white">{data.marketValue}</p>
+                      <p className="text-sm text-slate-400">Current Team</p>
+                      <Link 
+                        href={`/team/${data.currentTeam.id}`}
+                        className="text-emerald-400 hover:text-emerald-300 transition-colors inline-flex items-center gap-2"
+                      >
+                        <div className="relative w-6 h-6">
+                          <Image
+                            src={data.currentTeam.crest}
+                            alt={data.currentTeam.name}
+                            fill
+                            className="object-contain"
+                            sizes="24px"
+                          />
+                        </div>
+                        {data.currentTeam.name}
+                      </Link>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm text-slate-400">Last Updated</p>
-                    <p className="text-white">{formatDate(data.lastUpdated)}</p>
-                  </div>
                 </div>
               </div>
 
+              {/* Quick Actions */}
               <div className="bg-slate-700/30 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Current Team</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-slate-400">Team</p>
-                    <div className="flex items-center gap-4">
-                      <p className="text-white">{data.currentTeam.name}</p>
-                      <Link
-                        href={`/team/${data.currentTeam.id}`}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium"
-                      >
-                        View Team
-                      </Link>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-400">Contract Duration</p>
-                    <p className="text-white">
-                      {formatDate(data.currentTeam.contract.start)} - {formatDate(data.currentTeam.contract.until)}
-                    </p>
-                  </div>
+                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                <div className="space-y-4">
+                  <Link
+                    href={`/person/${params.id}/matches`}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2 w-full justify-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v6.5l5-3.5"/>
+                      <path d="M12 2v6.5l-5-3.5"/>
+                      <path d="M12 15.5V22"/>
+                      <path d="M17 8.5V15"/>
+                      <path d="M7 8.5V15"/>
+                      <path d="M17 8.5a5 5 0 1 1-10 0"/>
+                    </svg>
+                    View Matches
+                  </Link>
+                  {data.currentTeam && (
+                    <Link
+                      href={`/team/${data.currentTeam.id}`}
+                      className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2 w-full justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                      View Team
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -238,4 +239,4 @@ export default function PersonPage({
       </div>
     </main>
   );
-} 
+}
